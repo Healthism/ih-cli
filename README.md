@@ -12,7 +12,7 @@
 ```
 $ curl -L https://github.com/Healthism/ih-cli/releases/download/1.0.0/ih --output /usr/local/bin/ih
 $ chmod +x /usr/local/bin/ih
-$ git clone ssh://rlee@inputhealth.com@source.developers.google.com:2022/p/inputhealth-chr/r/staging-deployment /usr/local/lib/ih
+$ gcloud source repos clone staging-deployment /usr/local/lib/ih --project=inputhealth-chr
 ```
 ---
 ## Usage

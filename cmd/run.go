@@ -63,6 +63,11 @@ var runCmd = &cobra.Command{
 		}
 
 		/** Close Kubectl After **/
+		jobName := fmt.Sprintf("%s-console-%s", RELEASE, uuid)
+		err = util.Exec("kubectl", "-n", "chr-qa", "delete", "job", jobName)
+		if err != nil {
+			return
+		}
 
 		log.Print("Run Successful!")
 	},

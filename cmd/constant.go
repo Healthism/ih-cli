@@ -4,7 +4,7 @@ package cmd
 var RELEASE string
 /**/
 
-const VERSION = "1.0.0"
+const VERSION = "1.0.2"
 const EDITOR = "vim"
 const CONFIG_PATH = "/usr/local/lib/ih/values.yaml"
 
@@ -20,6 +20,5 @@ const RUN_DESCRIPTION_LONG = "InputHealth Command Line Interface."
 
 /** UPDATE **/
 const UPDATE = "update"
-const UPDATE_DESCRIPTION_SHORT = "Manual Configuration File Updator"
-const UPDATE_DESCRIPTION_LONG = `Manual edit configuration file instead of updating single file at a time
-to gain full access to the configuration files within IH`
+const UPDATE_DESCRIPTION_SHORT = "InputHealth Command Line Interface."
+const UPDATE_DESCRIPTION_LONG = "InputHealth Command Line Interface."
