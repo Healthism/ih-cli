@@ -10,7 +10,7 @@
 > Be sure to remove old 'ih' cli if you have installed previously. 
 
 ```
-$ curl -L https://github.com/Healthism/ih-cli/releases/download/1.0.0/ih --output /usr/local/bin/ih
+$ curl -L https://github.com/Healthism/ih-cli/releases/download/1.0.2/ih --output /usr/local/bin/ih
 $ chmod +x /usr/local/bin/ih
 $ gcloud source repos clone staging-deployment /usr/local/lib/ih --project=inputhealth-chr
 ```
