@@ -2,6 +2,8 @@ package util
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/inconshreveable/go-update"
 	"ih/lib/log"
 	"io/ioutil"
@@ -29,9 +31,9 @@ func Exec(cmd string, options ...string) error {
 	return nil
 }
 
-func ExecuteTemplate(templatePath string, input map[string]interface{}, outputPath string) error {
+func ExecuteTemplate(templateText string, input map[string]interface{}, outputPath string) error {
 	log.Printf("[TEMPLATE] Creating Template: %s - %s", input["release_name"], input["command"])
-	template, err := template.ParseFiles(templatePath)
+	template, err := template.New("template").Parse(templateText)
 	if err != nil {
 		return log.Errorf("[TEMPLATE] Failed to parse template: %v", err)
 	}
@@ -51,24 +53,39 @@ func ExecuteTemplate(templatePath string, input map[string]interface{}, outputPa
 	return nil
 }
 
-func UpdateCLI() error {
-	url := "https://github.com/rooneyl/temp/releases/download/1.0.0/main"
-
-	//Todo github api to see if latest version is higher
-
-	resp, err := http.Get(url)
+func UpdateCLI(currVersion string) error {
+	gitAPI := "https://api.github.com/repos/Healthism/ih-cli/releases/latest"
+	resp, err := http.Get(gitAPI)
 	if err != nil {
-		log.Printf("Failed to rollback from bad update: %v", err)
-		return err
+		return log.Errorf("[UPDATE] Failed to load latest version information: %v", err)
 	}
 
 	defer resp.Body.Close()
-	err = update.Apply(resp.Body, update.Options{})
-	if err != nil {
-		if rerr := update.RollbackError(err); rerr != nil {
-			log.Printf("Failed to rollback from bad update: %v", rerr)
-		}
+	jsonResp := make(map[string]interface{})
+	json.NewDecoder(resp.Body).Decode(&jsonResp)
+	latestVersion := jsonResp["name"]
+	if latestVersion == currVersion {
+		log.Print("[UPDATE] IH CLI is up to date! :)")
+		return nil
 	}
 
-	return err
+	log.Print("[UPDATE] IH CLI needs update! :(")
+	binLink := fmt.Sprintf("https://github.com/Healthism/ih-cli/releases/download/%s/ih", latestVersion)
+	log.Printf("[UPDATE] Fatching latest version: %s", binLink)
+	bin, err := http.Get(binLink)
+	if err != nil {
+		return log.Errorf("[UPDATE] Failed to download latest update: %v", err)
+	}
+
+	defer bin.Body.Close()
+	log.Print("[UPDATE] Applying update")
+	err = update.Apply(bin.Body, update.Options{})
+	if err != nil {
+		if rerr := update.RollbackError(err); rerr != nil {
+			return log.Errorf("[UPDATE] Failed to rollback from bad update: %v", rerr)
+		}
+		return log.Errorf("[UPDATE] Failed to rollback from bad update: %v", err)
+	}
+
+	return log.Error("[UPDATE] IH CLI has been updated succesfully :)")
 }

@@ -94,7 +94,7 @@ func recover(target string) {
 
 func gitExec(options ...string) error {
 	var gitCmd = "git"
-	var gitOption = []string{"-C", "config"}
+	var gitOption = []string{"-C", "/usr/local/lib/ih"}
 
 	git := exec.Command(gitCmd, append(gitOption, options...)...)
 

@@ -13,7 +13,7 @@ import (
 func UpdateValue(keyValues []string) error {
 	/** Open YAML file **/
 	log.Print("[YAML] Loading values.yaml")
-	file, err := os.Open("config/values.yaml")
+	file, err := os.Open("/usr/local/lib/ih/values.yaml")
 	if err != nil {
 		return log.Error("[YAML] Unable to load values.yaml")
 	}
@@ -63,7 +63,7 @@ func UpdateValue(keyValues []string) error {
 
 	/** Write Updated YAML File **/
 	log.Print("[YAML] Writing updated yaml file")
-	err = ioutil.WriteFile("config/values.yaml", d, 0644)
+	err = ioutil.WriteFile("/usr/local/lib/ih/values.yaml", d, 0644)
 	if err != nil {
 		return log.Error("[YAML] Failed to write new yaml file")
 	}

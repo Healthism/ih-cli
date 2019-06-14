@@ -2,12 +2,11 @@ package cmd
 
 /**/
 var RELEASE string
-
 /**/
 
 const VERSION = "1.0.0"
 const EDITOR = "vim"
-const CONFIG_PATH = "config/values.yaml"
+const CONFIG_PATH = "/usr/local/lib/ih/values.yaml"
 
 /** ROOT **/
 const IH = "ih"

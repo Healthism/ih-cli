@@ -16,7 +16,7 @@ var updateCmd = &cobra.Command{
 	Long:  UPDATE_DESCRIPTION_LONG,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Print("Initiating Update...")
-		
+
 		manualOption, _ := cmd.Flags().GetBool("manual")
 		if manualOption {
 			err = util.Exec(EDITOR, CONFIG_PATH)

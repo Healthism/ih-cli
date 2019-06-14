@@ -1,3 +1,0 @@
-[submodule "config"]
-	path = config
-	url = ssh://rlee@inputhealth.com@source.developers.google.com:2022/p/inputhealth-chr/r/staging-deployment

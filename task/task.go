@@ -1,4 +1,6 @@
-apiVersion: batch/v1
+package task
+
+const TASK = `apiVersion: batch/v1
 kind: Job
 metadata:
   name: {{.release_name}}-console-{{.unique_id}}
@@ -25,4 +27,4 @@ spec:
               name: {{.release_name}}-config-map
           - secretRef:
               name: {{.release_name}}-secret
-      restartPolicy: "Never"
+      restartPolicy: "Never"`

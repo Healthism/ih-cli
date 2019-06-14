@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"io/ioutil"
-	"strconv"
 	"time"
 
 	"fmt"
 
 	"ih/lib/log"
 	"ih/lib/util"
+	"ih/task"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -22,7 +22,7 @@ var runCmd = &cobra.Command{
 		log.Print("Initiating Run...")
 
 		viper.SetConfigName("values")
-		viper.AddConfigPath("./config")
+		viper.AddConfigPath("/usr/local/lib/ih")
 		err = viper.ReadInConfig()
 		if err != nil {
 			log.Errorf("[VIPER] Failed to read configuration: %v", err)
@@ -30,28 +30,27 @@ var runCmd = &cobra.Command{
 		}
 		log.Print("[VIPER] Configuration loaded")
 
-		imageURL, err := ioutil.ReadFile("config/substitutions/_APP_IMAGE_URL")
+		imageURL, err := ioutil.ReadFile("/usr/local/lib/ih/substitutions/_APP_IMAGE_URL")
 		if err != nil {
 			log.Errorf("[IOUTIL] Failed to read app image url: %v", err)
 			return
 		}
 		log.Print("[IOUTIL] App image url loaded")
 
-
 		input := make(map[string]interface{})
-		uuid := strconv.FormatInt(time.Now().Unix(), 36)
+		uuid := time.Now().Format("20060102150405")
 		input["release_name"] = RELEASE
 		input["command"], _ = cmd.Flags().GetString("command")
 		input["unique_id"] = uuid
 		input["image_url"] = string(imageURL)
 
-		err = util.ExecuteTemplate("tasks/task.yaml", input, "tasks/launch.yaml")
+		err = util.ExecuteTemplate(task.TASK, input, "/tmp/ih-launch.yaml")
 		if err != nil {
 			return
 		}
 
 		/** Kubectl: Apply Task File **/
-		err = util.Exec("kubectl", "-n", "chr-qa", "apply", "-f", "tasks/launch.yaml")
+		err = util.Exec("kubectl", "-n", "chr-qa", "apply", "-f", "/tmp/ih-launch.yaml")
 		if err != nil {
 			return
 		}
