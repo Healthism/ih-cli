@@ -5,6 +5,7 @@
 ### Requirement
 
 - Google Cloud SDK
+- kubectl
 
 ### Setup
 > Be sure to remove old 'ih' cli if you have installed previously. 
