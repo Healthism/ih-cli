@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"fmt"
+	"strings"
 
 	"ih/lib/log"
 	"ih/lib/util"
@@ -19,61 +20,68 @@ var runCmd = &cobra.Command{
 	Short: RUN_DESCRIPTION_SHORT,
 	Long:  RUN_DESCRIPTION_LONG,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Print("Initiating Run...")
+		command := "rails console"
+		if len(args) > 0 {
+			command = strings.Join(args," ");
+		}
 
 		viper.SetConfigName("values")
-		viper.AddConfigPath("/usr/local/lib/ih")
-		err = viper.ReadInConfig()
-		if err != nil {
+		viper.AddConfigPath(COFING_PATH)
+		if err := viper.ReadInConfig(); err != nil {
 			log.Errorf("[VIPER] Failed to read configuration: %v", err)
 			return
 		}
-		log.Print("[VIPER] Configuration loaded")
 
-		imageURL, err := ioutil.ReadFile("/usr/local/lib/ih/substitutions/_APP_IMAGE_URL")
+		imageURL, err := ioutil.ReadFile(IMAGE_PATH)
 		if err != nil {
 			log.Errorf("[IOUTIL] Failed to read app image url: %v", err)
 			return
 		}
-		log.Print("[IOUTIL] App image url loaded")
 
 		input := make(map[string]interface{})
 		uuid := time.Now().Format("20060102150405")
 		input["release_name"] = RELEASE
-		input["command"], _ = cmd.Flags().GetString("command")
+		input["command"] = command
 		input["unique_id"] = uuid
 		input["image_url"] = string(imageURL)
 
-		err = util.ExecuteTemplate(task.TASK, input, "/tmp/ih-launch.yaml")
-		if err != nil {
+		
+		if util.ExecuteTemplate(task.TASK, input, "/tmp/ih-launch.yaml") != nil {
 			return
 		}
 
 		/** Kubectl: Apply Task File **/
-		err = util.Exec("kubectl", "-n", "chr-qa", "apply", "-f", "/tmp/ih-launch.yaml")
-		if err != nil {
+		if util.Exec("kubectl", "-n", "chr-qa", "apply", "-f", "/tmp/ih-launch.yaml") != nil {
 			return
 		}
 
 		/** Kubectl: Attach Work Unit **/
+		var attachError error
 		workId := fmt.Sprintf("job.batch/%s-console-%s", RELEASE, uuid)
-		err = util.Exec("kubectl", "-n", "chr-qa", "attach", "-it", workId)
-		if err != nil {
-			return
+		for retry := 3; retry > 0; retry-- {
+			time.Sleep(time.Second)
+			if attachError := util.Exec("kubectl", "-n", "chr-qa", "attach", "-it", workId); attachError == nil {
+				break;
+			}
+
+			if retry != 1 {
+				log.Error("Encountered error while connecting the pod, trying again...")
+			}
+		}
+		
+		if attachError != nil {
+			log.Error("Unable to attach to the pod. Please submit a bug report.")
+			log.Error("Deleting the unattachable pod...")
 		}
 
 		/** Close Kubectl After **/
 		jobName := fmt.Sprintf("%s-console-%s", RELEASE, uuid)
-		err = util.Exec("kubectl", "-n", "chr-qa", "delete", "job", jobName)
-		if err != nil {
+		if util.Exec("kubectl", "-n", "chr-qa", "delete", "job", jobName) != nil {
 			return
 		}
-
-		log.Print("Run Successful!")
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-	runCmd.Flags().StringP("command", "c", "rails console", "Task Command")
 }

@@ -1,7 +1,6 @@
 package yaml
 
 import (
-	"fmt"
 	"ih/lib/log"
 	"io/ioutil"
 	"os"
@@ -12,14 +11,12 @@ import (
 
 func UpdateValue(keyValues []string) error {
 	/** Open YAML file **/
-	log.Print("[YAML] Loading values.yaml")
 	file, err := os.Open("/usr/local/lib/ih/values.yaml")
 	if err != nil {
 		return log.Error("[YAML] Unable to load values.yaml")
 	}
 
 	/** Decode YAML file **/
-	log.Print("[YAML] Decoding yaml file")
 	root := make(map[interface{}]interface{})
 	err = yaml.NewDecoder(file).Decode(&root)
 	if err != nil {
@@ -27,7 +24,6 @@ func UpdateValue(keyValues []string) error {
 	}
 
 	/** Validate Arguements **/
-	log.Print("[YAML] Validating arguemnts")
 	keyValue, err := validateArg(keyValues)
 	if err != nil {
 		return log.Error("[YAML] Invalid arguments")
@@ -50,25 +46,24 @@ func UpdateValue(keyValues []string) error {
 		if _, hasKey := inner[splitedKeys[len(splitedKeys)-1]]; !hasKey {
 			return log.Error("[YAML] Requested key does not exist")
 		}
-		log.Printf("[YAML] Updating value of '%s' to '%s' from '%s'", splitedKeys[len(splitedKeys)-1], inner[splitedKeys[len(splitedKeys)-1]], value)
+
+		log.Printf("[YAML] Update [%s]: '%s' -> '%s'", splitedKeys[len(splitedKeys)-1], inner[splitedKeys[len(splitedKeys)-1]], value)
 		inner[splitedKeys[len(splitedKeys)-1]] = value
 	}
 
 	/** Marshal Updated YAML File **/
-	log.Print("[YAML] Marshalling yaml file")
 	d, err := yaml.Marshal(&root)
 	if err != nil {
 		return log.Error("[YAML] Unable to marshal new yaml file")
 	}
 
 	/** Write Updated YAML File **/
-	log.Print("[YAML] Writing updated yaml file")
 	err = ioutil.WriteFile("/usr/local/lib/ih/values.yaml", d, 0644)
 	if err != nil {
 		return log.Error("[YAML] Failed to write new yaml file")
 	}
 
-	log.Print("[YAML] Updating yaml completed")
+	log.Print("[YAML] Template Generated")
 	return nil
 }
 
@@ -77,7 +72,7 @@ func validateArg(args []string) (map[string]string, error) {
 	for _, arg := range args {
 		argPair := strings.Split(arg, "=")
 		if len(argPair) < 2 {
-			return nil, fmt.Errorf("Update Value Must Be Form of 'Key=Value'")
+			return nil, log.Errorf("Update Value Must Be Form of 'Key=Value'")
 		}
 
 		key := argPair[0]

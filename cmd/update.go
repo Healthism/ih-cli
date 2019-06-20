@@ -19,7 +19,7 @@ var updateCmd = &cobra.Command{
 
 		manualOption, _ := cmd.Flags().GetBool("manual")
 		if manualOption {
-			err = util.Exec(EDITOR, CONFIG_PATH)
+			err = util.Exec(EDITOR, JOB_PATH)
 		} else {
 			err = yaml.UpdateValue(args)
 		}

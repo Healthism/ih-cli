@@ -1,2 +1,4 @@
 ih
 tasks/launch.yaml
+cmd/test.go
+release
