@@ -3,13 +3,14 @@ package cmd
 /**/
 var RELEASE string
 var CLUSTER string
+var NAME_SPACE string
+var KUBE_ENV []string
+
 /**/
 
-const VERSION = "1.0.3"
+const VERSION = "1.0.4"
 const EDITOR = "vim"
 
-const CLUSTER_TEMPLATE = "gke_%s_northamerica-northeast1-a_%s"
-const COFING_PATH = "/usr/local/lib/ih"
 const JOB_PATH = "/usr/local/lib/ih/values.yaml"
 const IMAGE_PATH = "/usr/local/lib/ih/substitutions/_APP_IMAGE_URL"
 

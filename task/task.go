@@ -3,28 +3,28 @@ package task
 const TASK = `apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{.release_name}}-console-{{.unique_id}}
+  name: {{.RELEASE_NAME}}-console-{{.UUID}}
 spec:
   ttlSecondsAfterFinished: 5
   template:
     metadata:
-      name: {{.release_name}}-console-{{.unique_id}}
+      name: {{.RELEASE_NAME}}-console-{{.UUID}}
     spec:
       containers:
-        - name: {{.release_name}}-console
-          image: {{.image_url}}
+        - name: {{.RELEASE_NAME}}-console
+          image: {{.IMAGE_URL}}
           imagePullPolicy: IfNotPresent
           command:
           - /bin/herokuish
           args:
           - procfile
           - exec
-          - {{.command}}
+          - {{.COMMAND}}
           tty: true
           stdin: true
           envFrom:
           - configMapRef:
-              name: {{.release_name}}-config-map
+              name: {{.RELEASE_NAME}}-config-map
           - secretRef:
-              name: {{.release_name}}-secret
+              name: {{.RELEASE_NAME}}-secret
       restartPolicy: "Never"`

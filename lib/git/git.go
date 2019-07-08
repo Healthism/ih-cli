@@ -2,6 +2,7 @@ package git
 
 import (
 	"os/exec"
+	"strings"
 	"time"
 
 	"ih/lib/log"
@@ -86,9 +87,10 @@ func recover(target string) {
 
 func gitExec(options ...string) error {
 	var gitCmd = "git"
-	var gitOption = []string{"-C", "/usr/local/lib/ih"}
+	var gitOptions = append([]string{"-C", "/usr/local/lib/ih"}, options...)
 
-	git := exec.Command(gitCmd, append(gitOption, options...)...)
+	log.Debugf("[GIT] %s %s", gitCmd, strings.Join(gitOptions, " "))
+	git := exec.Command(gitCmd, gitOptions...)
 
 	stdoutStderr, err := git.CombinedOutput()
 	log.CombinedStd("%s", stdoutStderr)

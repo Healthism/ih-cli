@@ -10,13 +10,13 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"runtime"
+	"strings"
 	"text/template"
 )
 
 const (
-	CLI_GIT_URL = "https://api.github.com/repos/Healthism/ih-cli/releases/latest"
+	CLI_GIT_URL      = "https://api.github.com/repos/Healthism/ih-cli/releases/latest"
 	CLI_DOWNLOAD_URL = "https://github.com/Healthism/ih-cli/releases/download/%s/ih"
 )
 
@@ -34,6 +34,23 @@ func Exec(cmd string, options ...string) error {
 	}
 
 	return nil
+}
+
+func ExecWithStdBuffer(cmd string, options ...string) (string, error) {
+	log.Printf("[EXEC] %s %s", cmd, strings.Join(options, " "))
+	process := exec.Command(cmd, options...)
+
+	var out bytes.Buffer
+	process.Stdin = os.Stdin
+	process.Stdout = &out
+	process.Stderr = os.Stderr
+
+	err := process.Run()
+	if err != nil {
+		return "", log.Errorf("[EXEC] Failed to run command: %v", err)
+	}
+
+	return strings.ReplaceAll(out.String(), "'", ""), nil
 }
 
 func ExecuteTemplate(templateText string, input map[string]interface{}, outputPath string) error {
@@ -73,7 +90,7 @@ func UpdateCLI(currVersion string) error {
 	whatsNew := version["body"]
 	if whatsNew != "" {
 		fmt.Println()
-		fmt.Printf("What's New @ %s\n",version)
+		fmt.Printf("What's New @ %s\n", version)
 		fmt.Println(whatsNew)
 	}
 
@@ -82,7 +99,7 @@ func UpdateCLI(currVersion string) error {
 	if runtime.GOOS == "linux" {
 		latestVersionUrl += "-linux"
 	}
-	
+
 	log.Printf("[UPDATE] Fatching latest version: %s", latestVersionUrl)
 	latestRelease, err := http.Get(latestVersionUrl)
 	if err != nil {

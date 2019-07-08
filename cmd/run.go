@@ -12,7 +12,6 @@ import (
 	"ih/task"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 var runCmd = &cobra.Command{
@@ -20,16 +19,13 @@ var runCmd = &cobra.Command{
 	Short: RUN_DESCRIPTION_SHORT,
 	Long:  RUN_DESCRIPTION_LONG,
 	Run: func(cmd *cobra.Command, args []string) {
+		uuid := time.Now().Format("20060102150405")
+		jobName := fmt.Sprintf("job.batch/%s-console-%s", RELEASE, uuid)
+		podSelector := fmt.Sprintf("--selector=job-name=%s-console-%s", RELEASE, uuid)
+
 		command := "rails console"
 		if len(args) > 0 {
-			command = strings.Join(args," ");
-		}
-
-		viper.SetConfigName("values")
-		viper.AddConfigPath(COFING_PATH)
-		if err := viper.ReadInConfig(); err != nil {
-			log.Errorf("[VIPER] Failed to read configuration: %v", err)
-			return
+			command = strings.Join(args, " ")
 		}
 
 		imageURL, err := ioutil.ReadFile(IMAGE_PATH)
@@ -38,48 +34,51 @@ var runCmd = &cobra.Command{
 			return
 		}
 
-		input := make(map[string]interface{})
-		uuid := time.Now().Format("20060102150405")
-		input["release_name"] = RELEASE
-		input["command"] = command
-		input["unique_id"] = uuid
-		input["image_url"] = string(imageURL)
+		templateArgs := make(map[string]interface{})
+		templateArgs["UUID"] = uuid
+		templateArgs["COMMAND"] = command
+		templateArgs["RELEASE_NAME"] = RELEASE
+		templateArgs["IMAGE_URL"] = string(imageURL)
 
-		
-		if util.ExecuteTemplate(task.TASK, input, "/tmp/ih-launch.yaml") != nil {
+		if util.ExecuteTemplate(task.TASK, templateArgs, "/tmp/ih-launch.yaml") != nil {
 			return
 		}
 
 		/** Kubectl: Apply Task File **/
-		if util.Exec("kubectl", "-n", "chr-qa", "apply", "-f", "/tmp/ih-launch.yaml") != nil {
+		if util.Exec("kubectl", append(KUBE_ENV, "apply", "-f", "/tmp/ih-launch.yaml")...) != nil {
+			return
+		}
+
+		/** Kubectl: Wait Container Ready **/
+		podName, err := util.ExecWithStdBuffer("kubectl", append(KUBE_ENV, "get", "pods", podSelector, "-o=jsonpath='{.items[0].metadata.name}'")...)
+		if err != nil {
+			releaseKubeResources(err, jobName)
+			return
+		}
+		if err := util.Exec("kubectl", append(KUBE_ENV, "wait", "--for=condition=ContainersReady", "--timeout=3m", "pod", podName)...); err != nil {
+			releaseKubeResources(err, jobName)
 			return
 		}
 
 		/** Kubectl: Attach Work Unit **/
-		var attachError error
-		workId := fmt.Sprintf("job.batch/%s-console-%s", RELEASE, uuid)
-		for retry := 3; retry > 0; retry-- {
-			time.Sleep(time.Second)
-			if attachError := util.Exec("kubectl", "-n", "chr-qa", "attach", "-it", workId); attachError == nil {
-				break;
-			}
-
-			if retry != 1 {
-				log.Error("Encountered error while connecting the pod, trying again...")
-			}
-		}
-		
-		if attachError != nil {
-			log.Error("Unable to attach to the pod. Please submit a bug report.")
-			log.Error("Deleting the unattachable pod...")
-		}
-
-		/** Close Kubectl After **/
-		jobName := fmt.Sprintf("%s-console-%s", RELEASE, uuid)
-		if util.Exec("kubectl", "-n", "chr-qa", "delete", "job", jobName) != nil {
+		if err := util.Exec("kubectl", "-n", "chr-qa", "attach", "-it", jobName); err != nil {
+			releaseKubeResources(err, jobName)
 			return
 		}
+
+		releaseKubeResources(nil, jobName)
 	},
+}
+
+func releaseKubeResources(err error, jobName string) {
+	if err != nil {
+		log.Error("Unable to attach to the pod. Please submit a bug report.")
+		log.Error("Deleting the unattachable pod...")
+	}
+
+	if util.Exec("kubectl", append(KUBE_ENV, "delete", jobName)...) != nil {
+		return
+	}
 }
 
 func init() {
