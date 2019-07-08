@@ -61,7 +61,7 @@ var runCmd = &cobra.Command{
 		}
 
 		/** Kubectl: Attach Work Unit **/
-		if err := util.Exec("kubectl", "-n", "chr-qa", "attach", "-it", jobName); err != nil {
+		if err := util.Exec("kubectl", append(KUBE_ENV, "attach", "-it", jobName)...); err != nil {
 			releaseKubeResources(err, jobName)
 			return
 		}

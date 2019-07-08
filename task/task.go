@@ -13,6 +13,9 @@ spec:
       containers:
         - name: {{.RELEASE_NAME}}-console
           image: {{.IMAGE_URL}}
+          resources:
+            requests:
+              memory: "1Gi"
           imagePullPolicy: IfNotPresent
           command:
           - /bin/herokuish

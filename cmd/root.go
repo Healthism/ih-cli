@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"os"
+	"os/signal"
+	"syscall"
 
 	"ih/lib/git"
 	"ih/lib/log"
@@ -28,7 +30,7 @@ var rootCmd = &cobra.Command{
 
 		/** UPDATE CLI **/
 		if err := util.UpdateCLI(VERSION); err != nil {
-			log.Print("Please enter your command again")
+			log.Positive("Please enter your command again")
 			os.Exit(1)
 			return
 		}
@@ -53,6 +55,8 @@ func Execute() {
 }
 
 func init() {
+	signal.Ignore(syscall.SIGINT)
+
 	cobra.OnInitialize()
 
 	rootCmd.PersistentFlags().Bool("verbose", false, "Verbose Output")

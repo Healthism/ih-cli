@@ -11,9 +11,14 @@ import (
 var VERBOSE_OUTPUT = false
 var logger = log.New(os.Stdout, "[IH] ", 0)
 
+var Green = color.New(color.FgGreen).SprintFunc()
 var Red = color.New(color.FgRed).SprintFunc()
 var Yellow = color.New(color.FgYellow).SprintFunc()
 var Cyan = color.New(color.FgCyan).SprintFunc()
+
+func Positive(msg string) {
+	logger.Print(Green(msg))
+}
 
 func Print(msg interface{}) {
 	logger.Print(msg)
