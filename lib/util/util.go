@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"errors"
 	"github.com/inconshreveable/go-update"
 	"ih/lib/log"
 	"io/ioutil"
@@ -87,14 +88,14 @@ func UpdateCLI(currVersion string) error {
 		return nil
 	}
 
+	log.Print("[UPDATE] IH CLI needs update! :(")
 	whatsNew := version["body"]
 	if whatsNew != "" {
-		fmt.Println()
-		fmt.Printf("What's New @ %s\n", version)
+		fmt.Println("*********************************************************************************************************************")
 		fmt.Println(whatsNew)
+		fmt.Println("*********************************************************************************************************************")
 	}
 
-	log.Print("[UPDATE] IH CLI needs update! :(")
 	latestVersionUrl := fmt.Sprintf(CLI_DOWNLOAD_URL, latestVersion)
 	if runtime.GOOS == "linux" {
 		latestVersionUrl += "-linux"
@@ -115,5 +116,6 @@ func UpdateCLI(currVersion string) error {
 		return log.Errorf("[UPDATE] Failed to rollback from bad update: %v", err)
 	}
 
-	return log.Error("[UPDATE] IH CLI has been updated succesfully")
+	log.Print("[UPDATE] IH CLI has been updated succesfully")
+	return errors.New("")
 }
