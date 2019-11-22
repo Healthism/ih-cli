@@ -22,13 +22,13 @@ type Job struct {
 	Pod       string
 }
 
-func New(namespace string, cluster string, release string, command string) Job {
+func New(nameSpace string, cluster string, release string, command string) Job {
 	image, _ := ioutil.ReadFile(config.IMAGE_PATH)
 	return Job{
 		Name:      fmt.Sprintf("%s-console-%s", release, time.Now().Format("20060102150405")),
 		Release:   release,
 		Cluster:   cluster,
-		NameSpace: namespace,
+		NameSpace: nameSpace,
 		Command:   command,
 		Image:     string(image),
 	}

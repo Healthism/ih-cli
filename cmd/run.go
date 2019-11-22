@@ -21,17 +21,17 @@ var runCmd = &cobra.Command{
 	Short: config.RUN_DESCRIPTION_SHORT,
 	Long:  config.RUN_DESCRIPTION_LONG,
 	Run: func(cmd *cobra.Command, args []string) {
-		release, cluster, nameSpace := util.ParseFlags(cmd)
+		cluster, nameSpace, release := util.ParseFlags(cmd)
 		command := "rails console"
 		if len(args) > 0 {
 			command = strings.Join(args, " ")
 		}
 
 		console.AddTable([]string{
-			fmt.Sprintf("NameSpace  : %s", console.SprintYellow(nameSpace)),
-			fmt.Sprintf("Cluster    : %s", console.SprintYellow(cluster)),
-			fmt.Sprintf("Release    : %s", console.SprintYellow(release)),
-			fmt.Sprintf("Command    : %s", console.SprintYellow(command)),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("NameSpace"), nameSpace),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("Cluster"), cluster),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("Release"), release),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("Command"), command),
 		})
 
 		gitLoading := console.ShowLoading("Loading configuration resources", "[1/3]")
@@ -90,5 +90,10 @@ func showError(err error) {
 
 func init() {
 	rootCmd.AddCommand(runCmd)
-	rootCmd.MarkPersistentFlagRequired("release")
+	runCmd.PersistentFlags().String("qa", "", "Access QA Server")
+	runCmd.PersistentFlags().String("staging", "", "Access Staging Server")
+
+	runCmd.PersistentFlags().String("release", "r", "Release Target")
+	runCmd.PersistentFlags().String("namespace", "n", "Release Name Space")
+	runCmd.PersistentFlags().StringP("cluster", "c", "gke_inputhealth-chr_northamerica-northeast1-a_staging", "Release Cluster")
 }
