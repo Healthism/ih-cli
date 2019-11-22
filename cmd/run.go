@@ -1,86 +1,94 @@
 package cmd
 
 import (
-	"io/ioutil"
-	"time"
-
 	"fmt"
 	"strings"
 
-	"ih/lib/log"
-	"ih/lib/util"
-	"ih/task"
-
+	"github.com/Healthism/ih-cli/config"
+	"github.com/Healthism/ih-cli/util"
+	"github.com/Healthism/ih-cli/util/console"
+	"github.com/Healthism/ih-cli/util/git"
+	"github.com/Healthism/ih-cli/util/kubectl"
 	"github.com/spf13/cobra"
 )
 
-var runCmd = &cobra.Command{
-	Use:   RUN,
-	Short: RUN_DESCRIPTION_SHORT,
-	Long:  RUN_DESCRIPTION_LONG,
-	Run: func(cmd *cobra.Command, args []string) {
-		uuid := time.Now().Format("20060102150405")
-		jobName := fmt.Sprintf("job.batch/%s-console-%s", RELEASE, uuid)
-		podSelector := fmt.Sprintf("--selector=job-name=%s-console-%s", RELEASE, uuid)
+var (
+	job kubectl.Job
+)
 
+var runCmd = &cobra.Command{
+	Use:   config.RUN,
+	Short: config.RUN_DESCRIPTION_SHORT,
+	Long:  config.RUN_DESCRIPTION_LONG,
+	Run: func(cmd *cobra.Command, args []string) {
+		release, cluster, nameSpace := util.ParseFlags(cmd)
 		command := "rails console"
 		if len(args) > 0 {
 			command = strings.Join(args, " ")
 		}
 
-		imageURL, err := ioutil.ReadFile(IMAGE_PATH)
+		console.AddTable([]string{
+			fmt.Sprintf("NameSpace  : %s", console.SprintYellow(nameSpace)),
+			fmt.Sprintf("Cluster    : %s", console.SprintYellow(cluster)),
+			fmt.Sprintf("Release    : %s", console.SprintYellow(release)),
+			fmt.Sprintf("Command    : %s", console.SprintYellow(command)),
+		})
+
+		gitLoading := console.ShowLoading("Loading configuration resources", "[1/3]")
+		err := git.Load(release)
+		gitLoading.HideLoading(err)
 		if err != nil {
-			log.Errorf("[IOUTIL] Failed to read app image url: %v", err)
+			showError(err)
 			return
 		}
 
-		templateArgs := make(map[string]interface{})
-		templateArgs["UUID"] = uuid
-		templateArgs["COMMAND"] = command
-		templateArgs["RELEASE_NAME"] = RELEASE
-		templateArgs["IMAGE_URL"] = string(imageURL)
-
-		if util.ExecuteTemplate(task.TASK, templateArgs, "/tmp/ih-launch.yaml") != nil {
-			return
-		}
-
-		/** Kubectl: Apply Task File **/
-		if util.Exec("kubectl", append(KUBE_ENV, "apply", "-f", "/tmp/ih-launch.yaml")...) != nil {
-			return
-		}
-
-		/** Kubectl: Wait Container Ready **/
-		podName, err := util.ExecWithStdBuffer("kubectl", append(KUBE_ENV, "get", "pods", podSelector, "-o=jsonpath='{.items[0].metadata.name}'")...)
+		createLoading := console.ShowLoading("Request job creation", "[2/3]")
+		job = kubectl.New(nameSpace, cluster, release, command)
+		err = job.Create()
+		createLoading.HideLoading(err)
 		if err != nil {
-			releaseKubeResources(err, jobName)
-			return
-		}
-		if err := util.Exec("kubectl", append(KUBE_ENV, "wait", "--for=condition=ContainersReady", "--timeout=3m", "pod", podName)...); err != nil {
-			releaseKubeResources(err, jobName)
+			showError(err)
 			return
 		}
 
-		/** Kubectl: Attach Work Unit **/
-		if err := util.Exec("kubectl", append(KUBE_ENV, "attach", "-it", jobName)...); err != nil {
-			releaseKubeResources(err, jobName)
+		waitLoading := console.ShowLoading("Waiting for the pod to be initialized", "[3/3]")
+		err = job.Wait()
+		waitLoading.HideLoading(err)
+		if err != nil {
+			showError(err)
 			return
 		}
 
-		releaseKubeResources(nil, jobName)
+		console.AddLine()
+		console.Print(console.SprintYellow("🚀 Attaching to the pod ... \n"))
+		err = job.Attach()
+		if err != nil {
+			showError(err)
+		}
+
+		console.AddLine()
+		deleteLoading := console.ShowLoading("Deleting the pod ...", "")
+		err = job.Delete()
+		deleteLoading.HideLoading(err)
+		if err != nil {
+			showError(err)
+			return
+		}
+
+		console.Print(console.SprintYellow("👋 Good Bye"))
+		console.AddLine()
 	},
 }
 
-func releaseKubeResources(err error, jobName string) {
-	if err != nil {
-		log.Error("Unable to attach to the pod. Please submit a bug report.")
-		log.Error("Deleting the unattachable pod...")
-	}
-
-	if util.Exec("kubectl", append(KUBE_ENV, "delete", jobName)...) != nil {
-		return
-	}
+func showError(err error) {
+	console.AddLine()
+	console.Errorf("%s", err)
+	job.Delete()
+	console.Error("⚠️  Error occured while running your command ...")
+	console.Error("Please try to run with '--verbose' flag to identify the source of error.")
 }
 
 func init() {
 	rootCmd.AddCommand(runCmd)
+	rootCmd.MarkPersistentFlagRequired("release")
 }
