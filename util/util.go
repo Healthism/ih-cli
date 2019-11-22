@@ -10,21 +10,23 @@ import (
 )
 
 func ParseFlags(cmd *cobra.Command) (string, string, string) {
-	release, _ := cmd.Flags().GetString("release")
 	cluster, _ := cmd.Flags().GetString("cluster")
 	nameSpace, _ := cmd.Flags().GetString("namespace")
+	release, _ := cmd.Flags().GetString("release")
 
-	if isQA, _ := cmd.Flags().GetBool("qa"); isQA {
+	if isQA, _ := cmd.Flags().GetString("qa"); isQA != "" {
 		cluster = "gke_inputhealth-chr_northamerica-northeast1-a_staging"
 		nameSpace = "chr-qa"
+		release = nameSpace + "-" + isQA
 	}
 
-	if isStaging, _ := cmd.Flags().GetBool("staging"); isStaging {
+	if isStaging, _ := cmd.Flags().GetString("staging"); isStaging != "" {
 		cluster = "gke_inputhealth-chr_northamerica-northeast1-a_staging"
 		nameSpace = "chr-staging"
+		release = nameSpace + "-" + isStaging
 	}
 
-	return release, cluster, nameSpace
+	return cluster, nameSpace, release
 }
 
 func InteractiveExec(cmd string, options ...string) error {

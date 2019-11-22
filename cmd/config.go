@@ -14,12 +14,12 @@ var configCmd = &cobra.Command{
 	Short: config.CONFIG_DESCRIPTION_SHORT,
 	Long:  config.CONFIG_DESCRIPTION_LONG,
 	Run: func(cmd *cobra.Command, args []string) {
-		release, cluster, nameSpace := util.ParseFlags(cmd)
+		cluster, nameSpace, release := util.ParseFlags(cmd)
 
 		console.AddTable([]string{
-			fmt.Sprintf("NameSpace  : %s", console.SprintYellow(nameSpace)),
-			fmt.Sprintf("Cluster    : %s", console.SprintYellow(cluster)),
-			fmt.Sprintf("Release    : %s", console.SprintYellow(release)),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("NameSpace"), nameSpace),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("Cluster"), cluster),
+			fmt.Sprintf("%-20v: %s", console.SprintYellow("Release"), release),
 		})
 
 		gitLoading := console.ShowLoading("Loading configuration resources", "[1/2]")
@@ -73,5 +73,10 @@ var configCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(configCmd)
-	rootCmd.MarkPersistentFlagRequired("release")
+	configCmd.PersistentFlags().String("qa", "", "Access QA Server")
+	configCmd.PersistentFlags().String("staging", "", "Access Staging Server")
+
+	configCmd.PersistentFlags().String("release", "r", "Release Target")
+	configCmd.PersistentFlags().String("namespace", "n", "Release Name Space")
+	configCmd.PersistentFlags().StringP("cluster", "c", "gke_inputhealth-chr_northamerica-northeast1-a_staging", "Release Cluster")
 }
