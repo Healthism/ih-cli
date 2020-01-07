@@ -93,7 +93,7 @@ func init() {
 	runCmd.PersistentFlags().String("qa", "", "Access QA Server")
 	runCmd.PersistentFlags().String("staging", "", "Access Staging Server")
 
-	runCmd.PersistentFlags().String("release", "r", "Release Target")
-	runCmd.PersistentFlags().String("namespace", "n", "Release Name Space")
+	runCmd.PersistentFlags().StringP("release", "r", "", "Release Target")
+	runCmd.PersistentFlags().StringP("namespace", "n", "", "Release Name Space")
 	runCmd.PersistentFlags().StringP("cluster", "c", "gke_inputhealth-chr_northamerica-northeast1-a_staging", "Release Cluster")
 }
