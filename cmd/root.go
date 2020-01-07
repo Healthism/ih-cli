@@ -66,6 +66,7 @@ func getPodInformation() (string, string, string, string) {
 	deployments := []selectObject{
 		{"QA", "chr-qa"},
 		{"Staging", "chr-staging"},
+		{"Ontario Medical Spec", "chr-omd"},
 	}
 	deploymentPrompt := promptui.Select{
 		Items: deployments,
