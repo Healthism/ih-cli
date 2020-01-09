@@ -8,6 +8,11 @@ import (
 )
 
 func Load(target string) (err error) {
+	_, err = util.BufferedExec("git", []string{"-C", config.GIT_PATH, "fetch", "--all"}...)
+	if err != nil {
+		return err
+	}
+
 	_, err = util.BufferedExec("git", []string{"-C", config.GIT_PATH, "reset", "--hard"}...)
 	if err != nil {
 		return err
