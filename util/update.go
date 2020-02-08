@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"runtime"
 	"strings"
@@ -12,28 +13,42 @@ import (
 	"github.com/inconshreveable/go-update"
 )
 
+type MetaData struct {
+	Version string
+	Changes []string
+}
+
 func UpdateCLI(currVersion string) (bool, error) {
 	versionInfo, err := http.Get(config.CLI_GIT_URL)
 	if err != nil {
 		console.Error("⚠️  Error occured while checking update ...")
 		return false, err
 	}
-
 	defer versionInfo.Body.Close()
-	version := make(map[string]interface{})
-	json.NewDecoder(versionInfo.Body).Decode(&version)
-	latestVersion := fmt.Sprintf("%v", version["name"])
-	if latestVersion == currVersion {
+
+	var metaData MetaData
+	jsonBytes, err := ioutil.ReadAll(versionInfo.Body)
+	if err != nil {
+		console.Error("⚠️  Error occured while checking update ...")
+		return false, err
+	}
+
+	err = json.Unmarshal(jsonBytes, &metaData)
+	if err != nil {
+		console.Error("⚠️  Error occured while checking update ...")
+		return false, err
+	}
+	if metaData.Version == currVersion {
 		return false, nil
 	}
 
 	console.AddTable([]string{
 		fmt.Sprintf("%s", console.SprintYellow("IH CLI needs update")),
 		fmt.Sprintf("%s", console.SprintYellow("Updating Input Health Command Line Interface...")),
-		fmt.Sprintf("%s", console.SprintYellow("Version "+currVersion+"  ➜  "+latestVersion)),
+		fmt.Sprintf("%s", console.SprintYellow("Version "+currVersion+"  ➜  "+metaData.Version)),
 	})
 
-	latestVersionUrl := fmt.Sprintf(config.CLI_DOWNLOAD_URL, latestVersion)
+	latestVersionUrl := fmt.Sprintf(config.CLI_DOWNLOAD_URL, metaData.Version)
 	if runtime.GOOS == "linux" {
 		latestVersionUrl += "-linux"
 	}
@@ -57,8 +72,15 @@ func UpdateCLI(currVersion string) (bool, error) {
 	}
 
 	console.AddLine()
+	console.Print("Changes: ")
+	for _, change := range metaData.Changes {
+		console.Print(change)
+	}
+
+	console.AddLine()
 	console.Print(console.SprintYellow("🚀 Update Complete"))
 	console.Print(console.SprintYellow("Please enter your command again"))
+
 	return true, nil
 }
 
