@@ -84,7 +84,7 @@ func getPodInformation() (string, string, string, string) {
 		{"Backend", "backend-1"},
 		{"Desktop", "desktop"},
 		{"Socket", "socket-1"},
-		{"Patient App", "patient-app-backend"},
+		{"Patient App", "up-patient-backend"},
 	}
 	releasePrompt := promptui.Select{
 		Items: releases,
