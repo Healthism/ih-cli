@@ -1,6 +1,6 @@
 package config
 
-const VERSION = "2.0.4"
+const VERSION = "2.0.5"
 const EDITOR = "vim"
 
 const GIT_PATH = "/usr/local/lib/ih"
