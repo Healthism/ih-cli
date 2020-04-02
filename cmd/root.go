@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/Healthism/ih-cli/config"
@@ -36,15 +37,23 @@ var rootCmd = &cobra.Command{
 		var cluster, nameSpace, release, action, command string
 		cluster, nameSpace, release, action = getPodInformation()
 		if action == "run" {
+			defaultAction := "rails console"
+			if strings.Contains(release, "up-patient") {
+				defaultAction = "bash"
+			}
 			commandPrompt := promptui.Prompt{
 				Label:   "Enter Your Command To Run",
-				Default: "rails console",
+				Default: defaultAction,
 				Templates: &promptui.PromptTemplates{
 					Prompt:  "{{ . }} ",
 					Success: `  {{ "Command" | yellow }}    : `,
 				},
 			}
-			command, _ = commandPrompt.Run()
+			var err error
+			command, err = commandPrompt.Run()
+			if err != nil {
+				os.Exit(0)
+			}
 		}
 
 		console.AddLine()
@@ -77,7 +86,10 @@ func getPodInformation() (string, string, string, string) {
 			Selected: `  {{ "Deployment" | yellow }} : {{ .Label }}`,
 		},
 	}
-	deploymentIndex, _, _ := deploymentPrompt.Run()
+	deploymentIndex, _, err := deploymentPrompt.Run()
+	if err != nil {
+		os.Exit(0)
+	}
 
 	/** Release Target **/
 	releases := []selectObject{
@@ -95,7 +107,10 @@ func getPodInformation() (string, string, string, string) {
 			Selected: `  {{ "Release" | yellow }}    : {{ .Label }}`,
 		},
 	}
-	releaseIndex, _, _ := releasePrompt.Run()
+	releaseIndex, _, err := releasePrompt.Run()
+	if err != nil {
+		os.Exit(0)
+	}
 
 	/** Action **/
 	actions := []selectObject{
@@ -111,7 +126,10 @@ func getPodInformation() (string, string, string, string) {
 			Selected: `  {{ "Action" | yellow }}     : {{ .Label }}`,
 		},
 	}
-	actionIndex, _, _ := actionPrompt.Run()
+	actionIndex, _, err := actionPrompt.Run()
+	if err != nil {
+		os.Exit(0)
+	}
 
 	nameSpace := deployments[deploymentIndex].Value
 	release := nameSpace + "-" + releases[releaseIndex].Value
@@ -119,6 +137,7 @@ func getPodInformation() (string, string, string, string) {
 
 	return "gke_inputhealth-chr_northamerica-northeast1-a_staging", nameSpace, release, action
 }
+
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		console.Errorf("%s", err)

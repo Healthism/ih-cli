@@ -1,6 +1,7 @@
 {
-  "version": "2.0.5",
+  "version": "2.0.6",
   "changes": [
-    "[Fix] change release name <patient-app-backend> -> <up-patient-backend>"
+    "[Fix] better interrupt handling",
+    "[Fix] default bash command for patient app release"
   ]
 }
