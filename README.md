@@ -4,8 +4,8 @@
 
 ### Requirement
 
-- Google Cloud SDK
-- kubectl
+- [Google Cloud SDK](https://cloud.google.com/sdk/docs/downloads-interactive)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
 ### Setup
 > Be sure to remove old 'ih' cli if you have installed previously. 
