@@ -17,8 +17,8 @@ $ gcloud init
 # initialize default kubernetes cluster
 $ gcloud container clusters get-credentials staging --zone northamerica-northeast1-a
 
-# linux users use : https://github.com/Healthism/ih-cli/releases/download/latest/ih-linux
-$ curl -L https://github.com/Healthism/ih-cli/releases/download/latest/ih --output /usr/local/bin/ih
+# linux users use : https://github.com/Healthism/ih-cli/releases/latest/download/ih-linux
+$ curl -L https://github.com/Healthism/ih-cli/releases/latest/download/ih --output /usr/local/bin/ih
 $ chmod +x /usr/local/bin/ih
 $ gcloud source repos clone staging-deployment /usr/local/lib/ih --project=inputhealth-chr
 ```
