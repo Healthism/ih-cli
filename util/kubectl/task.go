@@ -9,6 +9,8 @@ spec:
   template:
     metadata:
       name: {{.Name}}
+      labels:
+        chr-backend-1-redis-client: "true"
     spec:
       containers:
         - name: {{.Release}}-console

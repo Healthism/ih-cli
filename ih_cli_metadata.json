@@ -1,7 +1,6 @@
 {
-  "version": "2.0.6",
+  "version": "2.0.7",
   "changes": [
-    "[Fix] better interrupt handling",
-    "[Fix] default bash command for patient app release"
+    "[Update] Kube Job with Redis Client Label"
   ]
 }
